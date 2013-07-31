@@ -90,12 +90,13 @@ namespace BLEHealthThermometerCollector
             }
 
             // check for 0x1809 (official thermometer service UUID)
-            if (ad_services.Any(a => a.SequenceEqual(new Byte[] { 0x18, 0x09 }))) {
+            if (ad_services.Any(a => a.SequenceEqual(new Byte[] { 0x18, 0x0d }))) {
                 // connect to this device
-                Byte[] cmd = bglib.BLECommandGAPConnectDirect(e.sender, 0, 0x20, 0x30, 0x100, 0); // 125ms interval, 125ms window, active scanning
+                Byte[] cmd = bglib.BLECommandGAPConnectDirect(e.sender, 1,0x3c, 0x4c, 0x64, 0); // 125ms interval, 125ms window, active scanning
                 // DEBUG: display bytes written
                 ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("=> TX ({0}) [ {1}]", cmd.Length, ByteArrayToHexString(cmd)) + Environment.NewLine); });
                 bglib.SendCommand(serialAPI, cmd);
+                Console.WriteLine("trying to connect");
                 //while (bglib.IsBusy()) ;
 
                 // update state
@@ -166,9 +167,9 @@ namespace BLEHealthThermometerCollector
             ThreadSafeDelegate(delegate { txtLog.AppendText(log); });
 
             // check for thermometer measurement characteristic
-            if (e.uuid.SequenceEqual(new Byte[] { 0x1C, 0x2A }))
+            if (e.uuid.SequenceEqual(new Byte[] { 0x37, 0x2A }))
             {
-                ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("Found attribute w/UUID=0x2A1C: handle={0}", e.chrhandle) + Environment.NewLine); });
+                ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("Found attribute w/UUID=0x2A37: handle={0}", e.chrhandle) + Environment.NewLine); });
                 att_handle_measurement = e.chrhandle;
             }
             // check for subsequent client characteristic configuration
@@ -220,7 +221,7 @@ namespace BLEHealthThermometerCollector
 
                     // found the measurement + client characteristic configuration, so enable indications
                     // (this is done by writing 0x02 to the client characteristic configuration attribute)
-                    Byte[] cmd = bglib.BLECommandATTClientAttributeWrite(e.connection, att_handle_measurement_ccc, new Byte[] { 0x02 });
+                    Byte[] cmd = bglib.BLECommandATTClientAttributeWrite(e.connection, att_handle_measurement_ccc, new Byte[] { 0x01 });
                     // DEBUG: display bytes written
                     ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("=> TX ({0}) [ {1}]", cmd.Length, ByteArrayToHexString(cmd)) + Environment.NewLine); });
                     bglib.SendCommand(serialAPI, cmd);
@@ -231,7 +232,7 @@ namespace BLEHealthThermometerCollector
                 }
                 else
                 {
-                    ThreadSafeDelegate(delegate { txtLog.AppendText("Could not find 'Health Thermometer' measurement attribute with UUID 0x2A1C" + Environment.NewLine); });
+                    ThreadSafeDelegate(delegate { txtLog.AppendText("Could not find 'Health Thermometer' measurement attribute with UUID 0x2A37" + Environment.NewLine); });
                 }
             }
         }
