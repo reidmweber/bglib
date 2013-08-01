@@ -89,10 +89,10 @@ namespace BLEHealthThermometerCollector
                 }
             }
 
-            // check for 0x1809 (official thermometer service UUID)
-            if (ad_services.Any(a => a.SequenceEqual(new Byte[] { 0x18, 0x0d }))) {
+            // check for 0x180d (official thermometer service UUID)
+            if (ad_services.Any(a => a.SequenceEqual(new Byte[] { 0x18, 0x0a }))) {
                 // connect to this device
-                Byte[] cmd = bglib.BLECommandGAPConnectDirect(e.sender, 1,0x3c, 0x4c, 0x64, 0); // 125ms interval, 125ms window, active scanning
+                Byte[] cmd = bglib.BLECommandGAPConnectDirect(e.sender, e.address_type , 60, 60, 100, 0); // 125ms interval, 125ms window, active scanning
                 // DEBUG: display bytes written
                 ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("=> TX ({0}) [ {1}]", cmd.Length, ByteArrayToHexString(cmd)) + Environment.NewLine); });
                 bglib.SendCommand(serialAPI, cmd);
@@ -148,9 +148,9 @@ namespace BLEHealthThermometerCollector
             ThreadSafeDelegate(delegate { txtLog.AppendText(log); });
 
             // found "service" attribute groups (UUID=0x2800), check for thermometer service
-            if (e.uuid.SequenceEqual(new Byte[] { 0x09, 0x18 }))
+            if (e.uuid.SequenceEqual(new Byte[] { 0x0d, 0x18 }))
             {
-                ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("Found attribute group for service w/UUID=0x1809: start={0}, end=%d", e.start, e.end) + Environment.NewLine); });
+                ThreadSafeDelegate(delegate { txtLog.AppendText(String.Format("Found attribute group for service w/UUID=0x180d: start={0}, end=%d", e.start, e.end) + Environment.NewLine); });
                 att_handlesearch_start = e.start;
                 att_handlesearch_end = e.end;
             }
@@ -195,7 +195,7 @@ namespace BLEHealthThermometerCollector
             {
                 if (att_handlesearch_end > 0)
                 {
-                    //print "Found 'Health Thermometer' service with UUID 0x1809"
+                    //print "Found 'Health Thermometer' service with UUID 0x180d"
 
                     // found the Health Thermometer service, so now search for the attributes inside
                     Byte[] cmd = bglib.BLECommandATTClientFindInformation(e.connection, att_handlesearch_start, att_handlesearch_end);
@@ -209,7 +209,7 @@ namespace BLEHealthThermometerCollector
                 }
                 else
                 {
-                    ThreadSafeDelegate(delegate { txtLog.AppendText("Could not find 'Health Thermometer' service with UUID 0x1809" + Environment.NewLine); });
+                    ThreadSafeDelegate(delegate { txtLog.AppendText("Could not find 'Health Thermometer' service with UUID 0x180d" + Environment.NewLine); });
                 }
             }
             // check if we just finished searching for attributes within the thermometer service
